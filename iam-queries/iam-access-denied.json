@@ -1,0 +1,7 @@
+{
+    "logGroupName": "kr-id-smoke-test-v4-CloudWatchLogGroup-QKWd8UPfvtET",
+    "startTime": 1617788538, 
+    "endTime": 1618243127, 
+    "queryString": "filter errorCode like /Unauthorized|Denied|Forbidden/ | fields awsRegion, userIdentity.arn, userIdentity.accessKeyId, eventSource, eventName, sourceIPAddress, userAgent", 
+    "limit": 1000
+}
