@@ -52,15 +52,15 @@ echo $cw_log
 ## Begin Investigation
 Navigate to the **aws-cli-resources/iam-queries** folder
 
-In this folder you will find several CLI skeletons to assist in your investigation. 
+In this folder you will find two CLI skeletons to assist in your investigation. 
 
 Below is an example of how to modify and run the skeletons: 
 
-Each Skeleton will require you includde the correct **logGroupName** and **Endtime** values, to run sucessfully.
+Each Skeleton will require you include the correct **logGroupName** and **Endtime** values, to run sucessfully.
 To get the current endime period you can run the following command:
     
     ```bash
-    date +%s
+    date +%s #you can use this command to get teh current date. 
     ```
     
     Sample of the json content:
@@ -91,35 +91,97 @@ Run The following command to start the query from CLI Skeleton
     }
     ```
 
-**Retreive The Results** 
+**Retreive The Query  Results** 
 
-    ```bash
-    aws logs get-query-results --query-id "5ad84eaf-85b0-43af-81a3-0713b105d659" #<<-- Your query ID will be diffrent
-    ```
-This returns the requls in a json format which is great for using as input into another tool but difficut for humand to comprenend. 
+```bash
+  aws logs get-query-results --query-id "5ad84eaf-85b0-43af-81a3-0713b105d659" #<<-- Your query ID will be diffrent
+```
+This returns the results in a json format which is great for using as input into another tool but difficult for humans to comprenend. 
     
-   If you are doing an ad-hoc investigation us this command instead
-    
-    ```bash
-    aws logs get-query-results --query-id "5ad84eaf-85b0-43af-81a3-0713b105d659" --output table
-    ```
+If you are doing an ad-hoc investigation us this command instead
+ ```bash
+aws logs get-query-results --query-id "5ad84eaf-85b0-43af-81a3-0713b105d659" --output table
+```
     
 **Look at a Specific Log Record**
     
 If you want to review specifics of a particulare eventName, copy the **@ptr** value and paste it in teh followign command 
     
-    ```bash
-    aws logs get-log-record --log-record-pointer "CoEBCkQKQDkwNzU2NjgwOTgyODprci1pZC1zbW9rZS10ZXN0LXY0LUNsb3VkV2F0Y2hMb2dHcm91cC1RS1dkOFVQZnZ0RVQQAxI5GhgCBd4EB18AAAAEwmNzFgAGB0YEwAAAAPIgASjY6+K0jC8w0ZHjtIwvOJ0BQMqsDUiu8AZQl7UGEEIYAQ==" --output table
-    
-    # or
-    
-    aws logs get-log-record --log-record-pointer "CoEBCkQKQDkwNzU2NjgwOTgyODprci1pZC1zbW9rZS10ZXN0LXY0LUNsb3VkV2F0Y2hMb2dHcm91cC1RS1dkOFVQZnZ0RVQQAxI5GhgCBd4EB18AAAAEwmNzFgAGB0YEwAAAAPIgASjY6+K0jC8w0ZHjtIwvOJ0BQMqsDUiu8AZQl7UGEEIYAQ==" --query 'logRecord[*].eventTime
-    ```
+```bash
+aws logs get-log-record --log-record-pointer "CoEBCkQKQDkwNzU2NjgwOTgyODprci1pZC1zbW9rZS10ZXN0LXY0LUNsb3VkV2F0Y2hMb2dHcm91cC1RS1dkOFVQZnZ0RVQQAxI5GhgCBd4EB18AAAAEwmNzFgAGB0YEwAAAAPIgASjY6+K0jC8w0ZHjtIwvOJ0BQMqsDUiu8AZQl7UGEEIYAQ==" --output table
+# or
+aws logs get-log-record --log-record-pointer "CoEBCkQKQDkwNzU2NjgwOTgyODprci1pZC1zbW9rZS10ZXN0LXY0LUNsb3VkV2F0Y2hMb2dHcm91cC1RS1dkOFVQZnZ0RVQQAxI5GhgCBd4EB18AAAAEwmNzFgAGB0YEwAAAAPIgASjY6+K0jC8w0ZHjtIwvOJ0BQMqsDUiu8AZQl7UGEEIYAQ==" --query 'logRecord[*].eventTime
+```
 
 **Search Events by AccessKey Id**
 
 If you want to retreive events by AccessKeyId
+```bash
+aws logs get-query-results --query-id "082d54b5-4a2c-4bb9-ac2e-cf1c77814878" --query 'results[*][?userIdentity.accessKeyId=='AKIA3PSXH4ENSZD64E55']' --output table
+```
+
+**IAM Access Denied Attempts** (List all IAM access denied attempts)
+
+```
+filter errorCode like /Unauthorized|Denied|Forbidden/ | fields awsRegion, userIdentity.arn, eventSource, eventName, sourceIPAddress, userAgent
+
+```
+
+**IAM Access Key** (Filter Activities performed by a specific access key)
+```
+filter userIdentity.accessKeyId ="ASIA5GTZSQLSAMSY7FPB" | fields awsRegion, eventSource, eventName, sourceIPAddress, userAgent
+
+```
+**IAM Source Ip**  (Filter by source IP Address) 
+```
+filter sourceIPAddress = "72.21.196.65" | fields awsRegion, userIdentity.arn, eventSource, eventName, sourceIPAddress, userAgent
+
+```
+
+**List S3 Buckets** (Look for attempts to list S3 Buckets, which may indicate an access attempt)
+```
+filter eventName ="ListBuckets" | fields awsRegion, eventSource, eventName, sourceIPAddress, userAgent
+
+```
+
+**IAM Users And Roles Created** (Listing users and roles created can help identify unauthorized activity)
+
+```
+filter eventName="CreateUser" or eventName = "CreateRole" or eventName="PutRolePolicy" | fields requestParameters.userName, requestParameters.roleName, responseElements.user.arn, responseElements.role.arn, sourceIPAddress, eventTime, errorCode
+```
+
+## Containment
+
+
+**Block a Role**
+```bash
+aws iam put-role-policy --role-name ROLENAME --policy-name DenyAll --policy-document '{ "Statement": [ { "Effect": "Deny", "Action": "*", "Resource": "*" } ] }'
+```
+
+**Block A User**
+```bash
+aws iam put-user-policy --user-name USERNAME --policy-name DenyAll --policy-document '{ "Statement": [ { "Effect": "Deny", "Action": "*", "Resource": "*" } ] }'
+```
+
+**Block A Group**
+
+```bash
+aws iam put-group-policy --group-name GROUPNAME --policy-name DenyAll --policy-document '{ "Statement": [ { "Effect": "Deny", "Action": "*", "Resource": "*" } ] }'
+```
+
+**Delete an Inline Policy**
+
+- *From a Role*
     ```bash
-    aws logs get-query-results --query-id "082d54b5-4a2c-4bb9-ac2e-cf1c77814878" --query 'results[*][?userIdentity.accessKeyId=='AKIA3PSXH4ENSZD64E55']' --output table
+    aws iam delete-role-policy --role-name ROLENAME --policy-name DenyAll
+    ```
     
+- *From a User*
+    ```bash
+    aws iam delete-user-policy --user-name USERNAME --policy-name DenyAll
+    ```
+    
+- *From A Group*
+    ```bash
+    aws iam delete-group-policy --group-name GROUPNAME --policy-name DenyAll
     ```
