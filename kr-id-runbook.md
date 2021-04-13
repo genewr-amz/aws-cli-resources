@@ -13,18 +13,16 @@ unzip awscliv2.zip
 sudo ./aws/install
 #Check CLI version again to confirm upgrade was successful
 aws --version 
-
-
 ```
 
-## Get Log Group Name
-First you'll need to get the unique name for the CloudWatch log group in the target AWS account 
-Run the following CLI command to get the lognoam and store it as environment variable  cw_log
+## Find Your Log Group Name
+Amazon CloudWatch Logs can be used to monitor, store, and access your log files from many different sources including AWS CloudTrail. The following CLI command lists all your log groups so you can find yours, then enter the name you used for your log group in the next step.
 
 ```bash
 export cw_log=$(aws logs describe-log-groups --log-group-name-prefix mod- --query 'logGroups[*].logGroupName' | sed 's/[]    "[]//g')   
 
 ```
+
 enter the following command to see the log name:
 ```bash
 echo $cw_log
@@ -47,7 +45,7 @@ echo $cw_log
     Sample of the json content:
     ```json
     {
-        "logGroupName": "kr-id-smoke-test-v4-CloudWatchLogGroup-QKWd8UPfvtET",
+        "logGroupName": "mod-c551173c709a4722-CloudWatchLogGroup-3vb7wHEhC7s5",
         "startTime": 1617788538, 
         "endTime": 1618243127, 
         "queryString": "filter errorCode like /Unauthorized|Denied|Forbidden/ | fields awsRegion, userIdentity.arn, eventSource, eventName, sourceIPAddress, userAgent", 
@@ -95,5 +93,13 @@ echo $cw_log
     # or
     
     aws logs get-log-record --log-record-pointer "CoEBCkQKQDkwNzU2NjgwOTgyODprci1pZC1zbW9rZS10ZXN0LXY0LUNsb3VkV2F0Y2hMb2dHcm91cC1RS1dkOFVQZnZ0RVQQAxI5GhgCBd4EB18AAAAEwmNzFgAGB0YEwAAAAPIgASjY6+K0jC8w0ZHjtIwvOJ0BQMqsDUiu8AZQl7UGEEIYAQ==" --query 'logRecord[*].eventTime
+    ```
+
+4. Search Events by User Name
+
+    If you want to retreive events by UserId
+    ```bash
+    aws logs get-query-results --query-id "082d54b5-4a2c-4bb9-ac2e-cf1c77814878" --query 'results[*][?userIdentity.accessKeyId=='AKIA3PSXH4ENSZD64E55']' --output table
+    
     ```
     

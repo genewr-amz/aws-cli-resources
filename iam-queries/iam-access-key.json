@@ -1,7 +1,7 @@
 {
-    "logGroupName": "kr-id-smoke-test-v4-CloudWatchLogGroup-QKWd8UPfvtET", #Will this fly
+    "logGroupName": "mod-c551173c709a4722-CloudWatchLogGroup-3vb7wHEhC7s5",
     "startTime": 1617788538, 
-    "endTime": 1618243127, 
-    "queryString": "filter userIdentity.accessKeyId ='AKIAIOSFODNN7EXAMPLE' | fields awsRegion, eventSource, eventName, sourceIPAddress, userAgent", 
+    "endTime": 1618276382, 
+    "queryString": "filter userIdentity.accessKeyId ='AKIA3PSXH4ENSZD64E55' | fields eventTime, userIdentity.arn, eventSource, eventName, sourceIPAddress, userAgent", 
     "limit": 1000
 }
