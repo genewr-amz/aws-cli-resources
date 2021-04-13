@@ -22,7 +22,7 @@ First you'll need to get the unique name for the CloudWatch log group in the tar
 Run the following CLI command to get the lognoam and store it as environment variable  cw_log
 
 ```bash
-export cw_log=$(aws logs describe-log-groups --log-group-name-prefix kr- --query 'logGroups[*].logGroupName' | sed 's/[]    "[]//g')   
+export cw_log=$(aws logs describe-log-groups --log-group-name-prefix mod- --query 'logGroups[*].logGroupName' | sed 's/[]    "[]//g')   
 
 ```
 enter the following command to see the log name:
